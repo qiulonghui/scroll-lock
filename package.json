@@ -1,0 +1,17 @@
+{
+  "name": "scroll-lock-a",
+  "version": "1.0.1",
+  "description": "A JavaScript library to solve the rolling penetration of modal boxes on mobile and PC",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "scroll",
+    "lock",
+    "vue",
+    "react"
+  ],
+  "author": "Qiulonghui",
+  "license": "ISC"
+}
