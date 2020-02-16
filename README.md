@@ -2,6 +2,7 @@
 *Features:*
 solve the rolling penetration of modal boxes on mobile and PC.
 Enables target element scroll locking (for iOS Mobile, Android, desktop Safari/Chrome/Firefox).
+*note:* If use safari, you need to close the tab page, reopen the page after refreshing, srcoll-lock will take effect.
 ## Install
     
     $ yarn add scroll-lock-a
