@@ -1,4 +1,4 @@
-## Scroll-Lock
+## Scroll-Lock-a
 *Features:*
 solve the rolling penetration of modal boxes on mobile and PC.
 Enables target element scroll locking (for iOS Mobile, Android, desktop Safari/Chrome/Firefox).
