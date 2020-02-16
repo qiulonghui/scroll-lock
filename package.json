@@ -13,5 +13,6 @@
     "react"
   ],
   "author": "Qiulonghui",
+  "repository": "https://github.com/qiulonghui/scroll-lock.git",
   "license": "ISC"
 }
