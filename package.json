@@ -1,6 +1,6 @@
 {
   "name": "scroll-lock-a",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "A JavaScript library to solve the rolling penetration of modal boxes on mobile and PC",
   "main": "index.js",
   "scripts": {
