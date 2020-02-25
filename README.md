@@ -15,11 +15,13 @@ Enables disabled body scroll (for iOS Mobile, Android, desktop Safari/Chrome/Fir
 ##### Vue/ES6
 
 ```javascript
-// 1. Import the lib
-import bodyScrollLock from 'scroll-lock-a';
+// Import the lib
+import  { disableBodyScroll, enableBodyScroll } from 'scroll-lock-a';
   
 export default {
   mounted() {
+    // the target element is the one we would like to allow scroll Element
+    this.targetElement = document.querySelector('#targetElementId');
   }
 
   methods:{
@@ -27,12 +29,12 @@ export default {
       // ... some logic to show element
       this.visible = true;
       // Body Elements disabled scrolling
-      bodyScrollLock.afterOpen(); 
+      disableBodyScroll(this.targetElement); 
     },
     modalClose() {
       this.visible = false;
       // Re-enable scroll 
-      bodyScrollLock.beforeClose();
+      enableBodyScroll(this.targetElement);
     }
   }
 }
@@ -42,5 +44,5 @@ export default {
 
 | Function | Arguments | Description |
 | :--- | :--- | :--- |
-| `afterOpen` | `null` | Disables body element scroll when modal box showed  after |
-| `beforeClose` | `null` | Re-enable body element scroll when modal box closed  before |
+| `disableBodyScroll` | `targetElement: HTMLElement` | Disables body element scroll when modal box showed  after |
+| `enableBodyScroll` | `targetElement: HTMLElement` | Re-enable body element scroll when modal box closed  before |

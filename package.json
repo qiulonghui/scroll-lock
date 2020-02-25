@@ -2,9 +2,10 @@
   "name": "scroll-lock-a",
   "version": "1.0.5",
   "description": "A JavaScript library to solve the rolling penetration of modal boxes on mobile and PC",
-  "main": "index.js",
+  "main": "dist/bodyScrollLock.min.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --config ./webpack.config.js --mode production"
   },
   "keywords": [
     "scroll",
@@ -16,5 +17,13 @@
   ],
   "author": "Qiulonghui",
   "repository": "https://github.com/qiulonghui/scroll-lock.git",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.8.4",
+    "@babel/preset-env": "^7.8.4",
+    "babel-loader": "^8.0.6",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "webpack": "^4.41.6",
+    "webpack-cli": "^3.3.11"
+  }
 }
