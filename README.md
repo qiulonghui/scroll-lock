@@ -14,25 +14,25 @@
 ##### Vue/ES6
 
 ```javascript
-// Import the lib
+// 引入
 import  { disableBodyScroll, enableBodyScroll } from 'scroll-lock-a';
   
 export default {
   mounted() {
-    // the target element is the one we would like to allow scroll Element
+    // 允许滚动的元素dom
     this.targetElement = document.querySelector('#targetElementId');
   }
 
   methods:{
     modalShow() {
-      // ... some logic to show element
+      // ... 
       this.visible = true;
-      // Body Elements disabled scrolling
+      // 目标元素以外的元素禁止滚动
       disableBodyScroll(this.targetElement); 
     },
     modalClose() {
       this.visible = false;
-      // Re-enable scroll 
+      // 恢复body元素的滚动
       enableBodyScroll(this.targetElement);
     }
   }
