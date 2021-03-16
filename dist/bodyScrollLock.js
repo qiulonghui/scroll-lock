@@ -1,161 +1,261 @@
-! function (e) {
-  var t = {};
-
-  function n(r) {
-    if (t[r]) return t[r].exports;
-    var o = t[r] = {
-      i: r,
-      l: !1,
+(function (global, factory) {
+  if (typeof define === "function" && define.amd) {
+    define(['exports'], factory);
+  } else if (typeof exports !== "undefined") {
+    factory(exports);
+  } else {
+    var mod = {
       exports: {}
     };
-    return e[r].call(o.exports, o, o.exports, n), o.l = !0, o.exports
+    factory(mod.exports);
+    global.bodyScrollLock = mod.exports;
   }
-  n.m = e, n.c = t, n.d = function (e, t, r) {
-    n.o(e, t) || Object.defineProperty(e, t, {
-      enumerable: !0,
-      get: r
-    })
-  }, n.r = function (e) {
-    "undefined" != typeof Symbol && Symbol.toStringTag && Object.defineProperty(e, Symbol.toStringTag, {
-      value: "Module"
-    }), Object.defineProperty(e, "__esModule", {
-      value: !0
-    })
-  }, n.t = function (e, t) {
-    if (1 & t && (e = n(e)), 8 & t) return e;
-    if (4 & t && "object" == typeof e && e && e.__esModule) return e;
-    var r = Object.create(null);
-    if (n.r(r), Object.defineProperty(r, "default", {
-        enumerable: !0,
-        value: e
-      }), 2 & t && "string" != typeof e)
-      for (var o in e) n.d(r, o, function (t) {
-        return e[t]
-      }.bind(null, o));
-    return r
-  }, n.n = function (e) {
-    var t = e && e.__esModule ? function () {
-      return e.default
-    } : function () {
-      return e
+})(this, function (exports) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+
+  function _toConsumableArray(arr) {
+    if (Array.isArray(arr)) {
+      for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) {
+        arr2[i] = arr[i];
+      }
+
+      return arr2;
+    } else {
+      return Array.from(arr);
+    }
+  }
+
+  // Older browsers don't support event options, feature detect it.
+
+  // Adopted and modified solution from Bohdan Didukh (2017)
+  // https://stackoverflow.com/questions/41594997/ios-10-safari-prevent-scrolling-behind-a-fixed-overlay-and-maintain-scroll-posi
+
+  var hasPassiveEvents = false;
+  if (typeof window !== 'undefined') {
+    var passiveTestOptions = {
+      get passive() {
+        hasPassiveEvents = true;
+        return undefined;
+      }
     };
-    return n.d(t, "a", t), t
-  }, n.o = function (e, t) {
-    return Object.prototype.hasOwnProperty.call(e, t)
-  }, n.p = "", n(n.s = 0)
-}([function (e, t, n) {
-  "use strict";
+    window.addEventListener('testPassive', null, passiveTestOptions);
+    window.removeEventListener('testPassive', null, passiveTestOptions);
+  }
 
-  function r(e, t) {
-    var n = Object.keys(e);
-    if (Object.getOwnPropertySymbols) {
-      var r = Object.getOwnPropertySymbols(e);
-      t && (r = r.filter((function (t) {
-        return Object.getOwnPropertyDescriptor(e, t).enumerable
-      }))), n.push.apply(n, r)
+  var isIosDevice = typeof window !== 'undefined' && ( window.navigator.maxTouchPoints > 1);
+
+
+  var locks = [];
+  var documentListenerAdded = false;
+  var initialClientY = -1;
+  var previousBodyOverflowSetting = void 0;
+  var previousBodyPaddingRight = void 0;
+
+  // returns true if `el` should be allowed to receive touchmove events.
+  var allowTouchMove = function allowTouchMove(el) {
+    return locks.some(function (lock) {
+      if (lock.options.allowTouchMove && lock.options.allowTouchMove(el)) {
+        return true;
+      }
+
+      return false;
+    });
+  };
+
+  var preventDefault = function preventDefault(rawEvent) {
+    var e = rawEvent || window.event;
+
+    // For the case whereby consumers adds a touchmove event listener to document.
+    // Recall that we do document.addEventListener('touchmove', preventDefault, { passive: false })
+    // in disableBodyScroll - so if we provide this opportunity to allowTouchMove, then
+    // the touchmove event on document will break.
+    if (allowTouchMove(e.target)) {
+      return true;
     }
-    return n
-  }
 
-  function o(e, t, n) {
-    return t in e ? Object.defineProperty(e, t, {
-      value: n,
-      enumerable: !0,
-      configurable: !0,
-      writable: !0
-    }) : e[t] = n, e
-  }
+    // Do not prevent if the event has more than one touch (usually meaning this is a multi touch gesture like pinch to zoom).
+    if (e.touches.length > 1) return true;
 
-  function i(e, t) {
-    for (var n = 0; n < t.length; n++) {
-      var r = t[n];
-      r.enumerable = r.enumerable || !1, r.configurable = !0, "value" in r && (r.writable = !0), Object.defineProperty(e, r.key, r)
+    if (e.preventDefault) e.preventDefault();
+
+    return false;
+  };
+
+  var setOverflowHidden = function setOverflowHidden(options) {
+    // Setting overflow on body/documentElement synchronously in Desktop Safari slows down
+    // the responsiveness for some reason. Setting within a setTimeout fixes this.
+    setTimeout(function () {
+      // If previousBodyPaddingRight is already set, don't set it again.
+      if (previousBodyPaddingRight === undefined) {
+        var _reserveScrollBarGap = !!options && options.reserveScrollBarGap === true;
+        var scrollBarGap = window.innerWidth - document.documentElement.clientWidth;
+
+        if (_reserveScrollBarGap && scrollBarGap > 0) {
+          previousBodyPaddingRight = document.body.style.paddingRight;
+          document.body.style.paddingRight = scrollBarGap + 'px';
+        }
+      }
+
+      // If previousBodyOverflowSetting is already set, don't set it again.
+      if (previousBodyOverflowSetting === undefined) {
+        previousBodyOverflowSetting = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+      }
+    });
+  };
+
+  var restoreOverflowSetting = function restoreOverflowSetting() {
+    // Setting overflow on body/documentElement synchronously in Desktop Safari slows down
+    // the responsiveness for some reason. Setting within a setTimeout fixes this.
+    setTimeout(function () {
+      if (previousBodyPaddingRight !== undefined) {
+        document.body.style.paddingRight = previousBodyPaddingRight;
+
+        // Restore previousBodyPaddingRight to undefined so setOverflowHidden knows it
+        // can be set again.
+        previousBodyPaddingRight = undefined;
+      }
+
+      if (previousBodyOverflowSetting !== undefined) {
+        document.body.style.overflow = previousBodyOverflowSetting;
+
+        // Restore previousBodyOverflowSetting to undefined
+        // so setOverflowHidden knows it can be set again.
+        previousBodyOverflowSetting = undefined;
+      }
+    });
+  };
+
+  // https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollHeight#Problems_and_solutions
+  var isTargetElementTotallyScrolled = function isTargetElementTotallyScrolled(targetElement) {
+		return targetElement ? targetElement.scrollHeight - targetElement.scrollTop-20 <= targetElement.clientHeight : false;
+  };
+
+  var handleScroll = function handleScroll(event, targetElement) {
+    var clientY = event.targetTouches[0].clientY - initialClientY;
+
+    if (allowTouchMove(event.target)) {
+      return false;
     }
-  }
-  n.r(t), n.d(t, "disableBodyScroll", (function () {
-    return f
-  })), n.d(t, "enableBodyScroll", (function () {
-    return h
-  }));
-  var l = [],
-    c = !1,
-    u = function (e) {
-      return console.error("[body-scroll-lock] ".concat(e))
-    },
-    a = function (e) {
-      return (e = e || window.event).touches.length > 1 || (e.preventDefault && e.preventDefault(), !1)
-    },
-    s = function () {
-      function e(t) {
-        ! function (e, t) {
-          if (!(e instanceof t)) throw new TypeError("Cannot call a class as a function")
-        }(this, e), this.targetEl = t, this.initialClientY = -1, this.handleEvent = this.handleEvent.bind(this), this.init()
+
+    if (targetElement && targetElement.scrollTop === 0 && clientY > 0) {
+      // element is at the top of its scroll.
+      return preventDefault(event);
+    }
+
+    if (isTargetElementTotallyScrolled(targetElement) && clientY < 0) {
+      // element is at the bottom of its scroll.
+      return preventDefault(event);
+    }
+
+    event.stopPropagation();
+    return true;
+  };
+
+  var disableBodyScroll = exports.disableBodyScroll = function disableBodyScroll(targetElement, options) {
+    if (isIosDevice) {
+      // targetElement must be provided, and disableBodyScroll must not have been
+      // called on this targetElement before.
+      if (!targetElement) {
+        // eslint-disable-next-line no-console
+        console.error('disableBodyScroll unsuccessful - targetElement must be provided when calling disableBodyScroll on IOS devices.');
+        return;
       }
-      var t, n, r;
-      return t = e, (n = [{
-        key: "handleEvent",
-        value: function (e) {
-          "touchstart" == e.type ? this.start(e) : "touchmove" == e.type && this.move(e)
+
+      if (targetElement && !locks.some(function (lock) {
+        return lock.targetElement === targetElement;
+      })) {
+        var lock = {
+          targetElement: targetElement,
+          options: options || {}
+        };
+
+        locks = [].concat(_toConsumableArray(locks), [lock]);
+
+        targetElement.ontouchstart = function (event) {
+          if (event.targetTouches.length === 1) {
+            // detect single touch.
+            initialClientY = event.targetTouches[0].clientY;
+          }
+        };
+        targetElement.ontouchmove = function (event) {
+          if (event.targetTouches.length === 1) {
+            // detect single touch.
+            handleScroll(event, targetElement);
+          }
+        };
+
+        if (!documentListenerAdded) {
+          document.addEventListener('touchmove', preventDefault, hasPassiveEvents ? { passive: false } : undefined);
+          documentListenerAdded = true;
         }
-      }, {
-        key: "start",
-        value: function (e) {
-          1 === e.targetTouches.length && (this.initialClientY = e.targetTouches[0].clientY), this.targetEl.addEventListener("touchmove", this.handleEvent, !1)
-        }
-      }, {
-        key: "move",
-        value: function (e) {
-          var t, n = e.targetTouches[0].clientY - this.initialClientY;
-          if (1 === e.targetTouches.length) return this.targetEl && 0 === this.targetEl.scrollTop && n > 0 || (t = this.targetEl) && t.scrollHeight - t.scrollTop - 50 <= t.clientHeight && n < 0 ? a(e) : (e.stopPropagation(), !0)
-        }
-      }, {
-        key: "init",
-        value: function () {
-          c || (document.addEventListener("touchmove", a, {
-            passive: !1
-          }), c = !0), this.targetEl.addEventListener("touchstart", this.handleEvent, !1)
-        }
-      }, {
-        key: "removeEventListen",
-        value: function () {
-          c && document.removeEventListener("touchmove", a, {
-            passive: !1
-          }), this.targetEl.removeEventListener("touchstart", this.handleEvent, !1), this.targetEl.removeEventListener("touchmove", this.handleEvent, !1), c = !1
-        }
-      }]) && i(t.prototype, n), r && i(t, r), e
-    }(),
-    f = function (e) {
-      if (e) {
-        var t = new s(e);
-        l.push(t)
-      } else u("targetElement must be provided when calling disableBodyScroll.")
-    },
-    h = function (e) {
-      l.forEach((function (t) {
-        t.targetEl === e && t.removeEventListen()
-      })), l = []
-    },
-    d = {
-      afterOpen: function (e) {
-        u('"afterOpen" is deprecated! Use "disableBodyScroll" instead. \n https://github.com/qiulonghui/scroll-lock'), f(e)
-      },
-      beforeClose: function (e) {
-        u('"beforeClose" is deprecated! Use "enableBodyScroll" instead. \n https://github.com/qiulonghui/scroll-lock'), h(e)
       }
-    },
-    v = function (e) {
-      for (var t = 1; t < arguments.length; t++) {
-        var n = null != arguments[t] ? arguments[t] : {};
-        t % 2 ? r(Object(n), !0).forEach((function (t) {
-          o(e, t, n[t])
-        })) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(n)) : r(Object(n)).forEach((function (t) {
-          Object.defineProperty(e, t, Object.getOwnPropertyDescriptor(n, t))
-        }))
+    } else {
+      setOverflowHidden(options);
+      var _lock = {
+        targetElement: targetElement,
+        options: options || {}
+      };
+
+      locks = [].concat(_toConsumableArray(locks), [_lock]);
+    }
+  };
+
+  var clearAllBodyScrollLocks = exports.clearAllBodyScrollLocks = function clearAllBodyScrollLocks() {
+    if (isIosDevice) {
+      // Clear all locks ontouchstart/ontouchmove handlers, and the references.
+      locks.forEach(function (lock) {
+        lock.targetElement.ontouchstart = null;
+        lock.targetElement.ontouchmove = null;
+      });
+
+      if (documentListenerAdded) {
+        document.removeEventListener('touchmove', preventDefault, hasPassiveEvents ? { passive: false } : undefined);
+        documentListenerAdded = false;
       }
-      return e
-    }({
-      disableBodyScroll: f,
-      enableBodyScroll: h
-    }, d);
-  t.default = v
-}]);
+
+      locks = [];
+
+      // Reset initial clientY.
+      initialClientY = -1;
+    } else {
+      restoreOverflowSetting();
+      locks = [];
+    }
+  };
+
+  var enableBodyScroll = exports.enableBodyScroll = function enableBodyScroll(targetElement) {
+    if (isIosDevice) {
+      if (!targetElement) {
+        // eslint-disable-next-line no-console
+        console.error('enableBodyScroll unsuccessful - targetElement must be provided when calling enableBodyScroll on IOS devices.');
+        return;
+      }
+
+      targetElement.ontouchstart = null;
+      targetElement.ontouchmove = null;
+
+      locks = locks.filter(function (lock) {
+        return lock.targetElement !== targetElement;
+      });
+
+      if (documentListenerAdded && locks.length === 0) {
+        document.removeEventListener('touchmove', preventDefault, hasPassiveEvents ? { passive: false } : undefined);
+
+        documentListenerAdded = false;
+      }
+    } else {
+      locks = locks.filter(function (lock) {
+        return lock.targetElement !== targetElement;
+      });
+      if (!locks.length) {
+        restoreOverflowSetting();
+      }
+    }
+  };
+});
+

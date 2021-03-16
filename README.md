@@ -1,9 +1,8 @@
 ## Scroll-Lock-a
 *Features:*
-solve the rolling penetration of modal boxes on mobile and PC.
-Enables disabled body scroll (for iOS Mobile, Android, desktop Safari/Chrome/Firefox).
+解决移动端和PC端滚动穿透的问题。兼容Safari、QQ浏览器、微信浏览器及大多数安卓原生浏览器
 
-## Install
+## 安装
     
     $ yarn add scroll-lock-a
     
@@ -11,7 +10,7 @@ Enables disabled body scroll (for iOS Mobile, Android, desktop Safari/Chrome/Fir
     
     $ npm install scroll-lock-a
 
-## Usage examples
+## 使用
 ##### Vue/ES6
 
 ```javascript
@@ -40,7 +39,7 @@ export default {
 }
 ```
 
-## Functions
+## API
 
 | Function | Arguments | Description |
 | :--- | :--- | :--- |

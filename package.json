@@ -1,8 +1,8 @@
 {
   "name": "scroll-lock-a",
-  "version": "1.0.5",
+  "version": "1.0.7",
   "description": "A JavaScript library to solve the rolling penetration of modal boxes on mobile and PC",
-  "main": "dist/bodyScrollLock.min.js",
+  "main": "dist/bodyScrollLock.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --config ./webpack.config.js --mode production"
